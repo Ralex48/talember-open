@@ -1,5 +1,8 @@
 # Deploy an instance
 
+For the existing production release architecture and learning exercises, see
+[CI/CD walkthrough](CI_CD.md).
+
 Use your own Cloudflare account, domain, PayPal merchant account and creative
 provider accounts. Creation is disabled in the sample configuration.
 

@@ -1,5 +1,7 @@
 # Talember
 
+[![CI](https://github.com/Ralex48/talember-open/actions/workflows/ci.yml/badge.svg)](https://github.com/Ralex48/talember-open/actions/workflows/ci.yml)
+
 An open-source photo-to-video application. Turn photos and a story into a short
 animated video, review its script before generation, then place the greeting,
 hearts and fireworks yourself before downloading the finished MP4.
@@ -42,7 +44,23 @@ to the production runner or deployment credentials.
 | Python | Typography, bidirectional text, deterministic MP4 compositing and publication audit |
 | Go | Bounded public-page probes, JSON health and Prometheus metrics |
 | Ansible | Repeatable RHEL packages, optional Node/runner setup and monitoring deployment |
+| GitHub Actions + RHEL 9 | Production CI/CD: verification, Cloudflare deployment and post-deployment checks |
 | SQL | Job state, receipts, retention and recovery records |
+
+## CI/CD in practice
+
+Production uses GitHub Actions with a self-hosted RHEL 9 runner. A push to the
+private repository's main branch runs verification; a successful run enables
+deployment when the production CD switch is active. The release deploys the
+renderer and application to Cloudflare, then checks public-page availability.
+Database migrations remain a separate reviewed operation.
+
+This public repository runs application, renderer and operations checks on
+GitHub-hosted runners. The CI badge above describes those public checks. Production
+deployment credentials and runner access stay in the private environment.
+
+See [the CI/CD walkthrough](docs/CI_CD.md) for the release diagram, tool roles,
+failure behavior and exercises for reproducing the setup in your own environment.
 
 ## Run locally
 
