@@ -97,6 +97,22 @@ and Go monitoring. Deployment is opt-in and is never triggered by public CI.
 The public demo pictures are labeled SVG placeholders and the demo video is a
 synthetic fixture. Supply your own licensed demo assets before launching a site.
 
+## Monitoring roadmap
+
+**Implemented:** a Go public-page probe exposes JSON health and Prometheus-compatible
+metrics; Ansible deploys the probe to the RHEL operations host.
+
+**Planned:** Prometheus for metric collection and retention, Grafana dashboards
+and alert rules, and Ansible provisioning of the monitoring stack. These components
+are not yet deployed or validated as part of this project. The planned dashboards
+will distinguish exporter availability, page-check results, stale measurements and
+page latency. An independent external check is also planned to detect monitoring-host
+outages.
+
+This work will provide practical exercises in Linux operations, networking,
+observability and infrastructure automation alongside the existing
+[CI/CD learning path](docs/CI_CD.md).
+
 ## Practical limits
 
 Image/video generation is probabilistic: likeness, spatial continuity and object
