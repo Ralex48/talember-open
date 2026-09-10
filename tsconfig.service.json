@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2024",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "types": [],
+    "lib": ["ES2024"]
+  },
+  "include": ["app/**/*.ts", "renderer/worker.ts", "worker-configuration.d.ts"],
+  "exclude": ["app/client.ts", "app/placement-client.ts"]
+}

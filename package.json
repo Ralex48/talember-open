@@ -1,0 +1,40 @@
+{
+  "name": "talember",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A simple OpenRouter-directed photo and story to video service using PayPal and fal.ai.",
+  "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "packageManager": "npm@11.9.0",
+  "scripts": {
+    "build:client": "node scripts/build-service.mjs",
+    "build": "npm run build:client && WRANGLER_WRITE_LOGS=false WRANGLER_SEND_METRICS=false WRANGLER_SEND_ERROR_REPORTS=false CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false wrangler deploy --dry-run --env-file /dev/null --outdir dist",
+    "typecheck": "tsc --noEmit -p tsconfig.service.json && tsc --noEmit -p app/tsconfig.client.json",
+    "test": "vitest run --config vitest.service.config.ts",
+    "test:service": "vitest run --config vitest.service.config.ts",
+    "lint": "eslint app tests/service --max-warnings=0",
+    "db:local": "WRANGLER_WRITE_LOGS=false WRANGLER_SEND_METRICS=false CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false wrangler d1 migrations apply TALEMBER_DB --local --env-file /dev/null",
+    "dev": "npm run build:client && WRANGLER_WRITE_LOGS=false WRANGLER_SEND_METRICS=false CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false wrangler dev --local --env-file /dev/null",
+    "types:worker": "WRANGLER_WRITE_LOGS=false WRANGLER_SEND_METRICS=false CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false wrangler types worker-configuration.d.ts --strict-vars=false --env-file /dev/null"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
+    "@cloudflare/vitest-pool-workers": "0.20.1",
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.62.1",
+    "@types/node": "26.1.2",
+    "esbuild": "0.28.1",
+    "eslint": "10.8.0",
+    "globals": "17.9.0",
+    "prettier": "3.9.6",
+    "typescript": "6.0.2",
+    "typescript-eslint": "8.66.0",
+    "vitest": "4.1.10",
+    "wrangler": "4.118.0"
+  },
+  "dependencies": {
+    "@cloudflare/containers": "0.3.7"
+  }
+}

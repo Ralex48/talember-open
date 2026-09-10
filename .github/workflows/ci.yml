@@ -1,0 +1,48 @@
+name: Verify
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck && npm run lint && npm test && npm run build
+      - run: npm run db:local
+      - run: python3 ops/audit_public.py .
+  renderer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --target test -t talember-renderer-test renderer
+      - run: docker run --rm --network none talember-renderer-test python3 -m unittest test_renderer
+  operations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.4'
+          cache: false
+      - run: go test -race ./...
+        working-directory: ops/probe
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s ops -p 'test_*.py'
+      - run: pip install ansible-core==2.21.0
+      - run: ansible-playbook -i ops/ansible/inventory.example.yml ops/ansible/site.yml --syntax-check

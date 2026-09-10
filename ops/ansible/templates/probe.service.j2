@@ -1,0 +1,16 @@
+[Unit]
+Description=Talember Go public-page probe
+After=network-online.target
+
+[Service]
+ExecStart={{ ops_directory }}/bin/talember-probe -origin {{ probe_origin }} -listen 127.0.0.1:9188
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+UMask=0077
+
+[Install]
+WantedBy=default.target

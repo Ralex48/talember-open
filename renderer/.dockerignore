@@ -1,0 +1,6 @@
+*
+!server.py
+!test_renderer.py
+!Dockerfile
+!fonts/
+!fonts/**

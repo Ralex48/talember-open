@@ -1,0 +1,71 @@
+-- A fresh, isolated creation service. No historical customer table is changed.
+CREATE TABLE creation_jobs (
+  id TEXT PRIMARY KEY,
+  session_hash TEXT NOT NULL UNIQUE,
+  csrf TEXT NOT NULL,
+  origin TEXT NOT NULL,
+  phase TEXT NOT NULL DEFAULT 'draft' CHECK (phase IN (
+    'draft','uploading','ordering','awaiting_paypal','capturing','paid',
+    'directing','directed','submitting','generating','ready','correcting','correction_submitting',
+    'correction_directing','correction_directed','correction_generating','choice','selected',
+    'video_directing','video_directed','video_submitting','video_generating','complete','attention','deleting'
+  )),
+  story TEXT,
+  cast TEXT,
+  participants INTEGER CHECK (participants BETWEEN 1 AND 4),
+  consent_at INTEGER,
+  locale TEXT NOT NULL DEFAULT 'en' CHECK (locale IN ('en','ru','es','he')),
+  photos_json TEXT,
+  snapshot_at INTEGER,
+  order_id TEXT UNIQUE,
+  approval_url TEXT,
+  payee_id TEXT,
+  order_started_at INTEGER,
+  capture_started_at INTEGER,
+  capture_id TEXT UNIQUE,
+  paid_at INTEGER,
+  direction_json TEXT,
+  direction_request_id TEXT,
+  request_id TEXT UNIQUE,
+  submitted_at INTEGER,
+  original_key TEXT,
+  correction TEXT,
+  correction_direction_json TEXT,
+  correction_direction_request_id TEXT,
+  correction_request_id TEXT UNIQUE,
+  correction_submitted_at INTEGER,
+  corrected_key TEXT,
+  selected TEXT CHECK (selected IN ('original','corrected')),
+  video_direction_json TEXT,
+  video_direction_request_id TEXT,
+  video_request_id TEXT UNIQUE,
+  video_submitted_at INTEGER,
+  video_key TEXT,
+  content_expires_at INTEGER,
+  content_deleted_at INTEGER,
+  issue TEXT,
+  lease_token TEXT,
+  lease_until INTEGER NOT NULL DEFAULT 0,
+  next_at INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL,
+  CHECK (paid_at IS NULL OR capture_id IS NOT NULL),
+  CHECK (direction_json IS NULL OR paid_at IS NOT NULL),
+  CHECK (request_id IS NULL OR paid_at IS NOT NULL),
+  CHECK (correction_request_id IS NULL OR (paid_at IS NOT NULL AND original_key IS NOT NULL)),
+  CHECK (corrected_key IS NULL OR original_key IS NOT NULL)
+);
+CREATE INDEX creation_jobs_recovery ON creation_jobs(next_at, lease_until);
+CREATE INDEX creation_jobs_expiry ON creation_jobs(expires_at);
+
+-- Minimal operational receipt; no story, photos, email or payment payload.
+CREATE TABLE creation_payments (
+  job_id TEXT PRIMARY KEY,
+  order_id TEXT NOT NULL UNIQUE,
+  capture_id TEXT NOT NULL UNIQUE,
+  payee_id TEXT NOT NULL,
+  amount TEXT NOT NULL CHECK (amount = '9.99'),
+  currency TEXT NOT NULL CHECK (currency = 'USD'),
+  captured_at INTEGER NOT NULL
+);

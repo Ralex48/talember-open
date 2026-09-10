@@ -1,0 +1,43 @@
+---
+- name: Install RHEL prerequisites
+  become: true
+  ansible.builtin.dnf:
+    name: [git, curl, tar, gzip, libicu, openssl-libs, python3]
+    state: present
+- name: Configure the official Docker repository
+  become: true
+  ansible.builtin.yum_repository:
+    name: docker-ce-stable
+    description: Docker CE Stable
+    baseurl: https://download.docker.com/linux/rhel/9/$basearch/stable
+    enabled: true
+    gpgcheck: true
+    gpgkey: https://download.docker.com/linux/rhel/gpg
+- name: Install Docker packages
+  become: true
+  ansible.builtin.dnf:
+    name: [docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin]
+    state: present
+- name: Enable Docker
+  become: true
+  ansible.builtin.systemd_service:
+    name: docker
+    enabled: true
+    state: started
+- name: Check lingering
+  ansible.builtin.stat:
+    path: '/var/lib/systemd/linger/{{ ansible_facts.user_id }}'
+  register: linger
+- name: Enable user services after logout and reboot
+  become: true
+  ansible.builtin.command:
+    argv: [loginctl, enable-linger, '{{ ansible_facts.user_id }}']
+  when: not linger.stat.exists
+  changed_when: true
+- name: Grant root-equivalent Docker access only when explicitly selected
+  become: true
+  ansible.builtin.user:
+    name: '{{ ansible_facts.user_id }}'
+    groups: docker
+    append: true
+  when: grant_docker_access | bool

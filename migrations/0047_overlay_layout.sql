@@ -1,0 +1,5 @@
+ALTER TABLE creation_jobs ADD COLUMN overlay_review INTEGER NOT NULL DEFAULT 0 CHECK(overlay_review IN (0,1));
+ALTER TABLE creation_jobs ADD COLUMN overlay_x REAL NOT NULL DEFAULT 50 CHECK(overlay_x BETWEEN 0 AND 100);
+ALTER TABLE creation_jobs ADD COLUMN overlay_y REAL NOT NULL DEFAULT 20 CHECK(overlay_y BETWEEN 0 AND 100);
+ALTER TABLE creation_jobs ADD COLUMN overlay_scale REAL NOT NULL DEFAULT 80 CHECK(overlay_scale BETWEEN 30 AND 100);
+ALTER TABLE creation_jobs ADD COLUMN overlay_revision INTEGER NOT NULL DEFAULT 0;

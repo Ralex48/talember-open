@@ -1,0 +1,38 @@
+---
+- name: Require a registered runner; never handle registration tokens here
+  ansible.builtin.stat:
+    path: '{{ ops_directory }}/runner/.runner'
+  register: runner_registration
+- name: Check runner registration
+  ansible.builtin.assert:
+    that: runner_registration.stat.exists
+    fail_msg: Register the runner privately with GitHub before enabling manage_runner.
+- name: Install the runner service definition
+  ansible.builtin.template:
+    src: runner.service.j2
+    dest: '{{ ansible_facts.user_dir }}/.config/systemd/user/talember-runner.service'
+    mode: '0600'
+  notify: Restart runner
+- name: Install the registered runner service launcher
+  ansible.builtin.copy:
+    src: '{{ ops_directory }}/runner/bin/runsvc.sh'
+    dest: '{{ ops_directory }}/runner/runsvc.sh'
+    remote_src: true
+    mode: '0700'
+  notify: Restart runner
+- name: Set the runner saved Node path
+  ansible.builtin.copy:
+    content: '{{ ops_directory }}/runtime/node-v{{ node_version }}-linux-x64/bin:/usr/local/bin:/usr/bin:/bin'
+    dest: '{{ ops_directory }}/runner/.path'
+    mode: '0600'
+  notify: Restart runner
+- name: Enable and start the registered runner
+  when: not ansible_check_mode
+  ansible.builtin.systemd_service:
+    name: talember-runner.service
+    scope: user
+    enabled: true
+    daemon_reload: true
+    state: started
+  environment:
+    XDG_RUNTIME_DIR: '/run/user/{{ ansible_facts.user_uid }}'

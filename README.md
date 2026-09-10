@@ -1,0 +1,100 @@
+# Talember
+
+An open-source photo-to-video application. Turn photos and a story into a short
+animated video, review its script before generation, then place the greeting,
+hearts and fireworks yourself before downloading the finished MP4.
+
+This repository contains the working TypeScript application, Python video
+compositor, Go monitoring probe and Ansible operations playbook. Production
+credentials, customer media and private repository history are excluded.
+
+## What it does
+
+- Cartoon and Realism image styles, with one generated reference per source photo.
+- Server-verified PayPal capture before paid creative work.
+- Editable video script with explicit generation approval.
+- Durable job state, private media storage and bounded recovery of failed work.
+- Deterministic multilingual greetings instead of model-generated lettering.
+- Live placement of the greeting, individual hearts, fireworks and supported emoji.
+- English, Spanish, Russian and Hebrew interfaces.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  User[Browser] --> Worker[TypeScript Worker]
+  Worker --> D1[(D1 job state)]
+  Worker --> R2[(Private R2 media)]
+  Worker --> PayPal[PayPal]
+  Worker --> Models[OpenRouter and fal.ai]
+  Worker --> Renderer[Python + Pillow + FFmpeg container]
+  Ansible[Ansible over SSH] --> RHEL[RHEL CI and monitoring host]
+  RHEL --> Worker
+```
+
+Cloudflare serves production requests. RHEL supports private release automation
+and monitoring. The public repository uses GitHub-hosted CI; it has no connection
+to the production runner or deployment credentials.
+
+| Language/tool | Responsibility |
+| --- | --- |
+| TypeScript | Browser UI, API, payments and durable orchestration |
+| Python | Typography, bidirectional text, deterministic MP4 compositing and publication audit |
+| Go | Bounded public-page probes, JSON health and Prometheus metrics |
+| Ansible | Repeatable RHEL packages, optional Node/runner setup and monitoring deployment |
+| SQL | Job state, receipts, retention and recovery records |
+
+## Run locally
+
+Use Node24/npm11. Docker is needed for compositor tests. Go1.24+ and Python3
+are needed for the optional operations tools.
+
+```sh
+npm ci
+npm run typecheck
+npm run lint
+npm test
+npm run db:local
+npm run dev
+```
+
+The checked-in configuration disables creation and uses placeholders. This opens
+the interface without performing real payments or generation. To explore the
+simulated journey, run `node scripts/preview-service.mjs --synthetic`; providers
+are local fakes and the synthetic PayPal redirect is a test fixture, not a real
+checkout. See [development](docs/DEVELOPMENT.md) for the test boundaries.
+
+```sh
+docker build --target test -t talember-renderer-test renderer
+docker run --rm --network none talember-renderer-test python3 -m unittest test_renderer
+cd ops/probe && go test -race ./...
+```
+
+## Deploy your own instance
+
+Follow [deployment](docs/DEPLOYMENT.md) for Cloudflare resources, configuration,
+provider secrets and activation. [Operations](ops/README.md) covers RHEL/Ansible
+and Go monitoring. Deployment is opt-in and is never triggered by public CI.
+
+The public demo pictures are labeled SVG placeholders and the demo video is a
+synthetic fixture. Supply your own licensed demo assets before launching a site.
+
+## Practical limits
+
+Image/video generation is probabilistic: likeness, spatial continuity and object
+permanence are not guaranteed. Reference-preservation prompts cannot guarantee
+physical correctness. The placement preview shows finished typography, not every
+animation frame; placement is manual, with no face detection. Font/script support
+is validated. The current emoji compositor supports heart and party-popper glyphs.
+
+Provider access, models, country eligibility and pricing must be verified for your
+own accounts. Model identifiers in this snapshot reflect one deployment and may
+need adjustment. The included policy copy is example product copy, not legal
+advice. Refund execution is not automatic. Review your policies before activation.
+
+## Contributing and license
+
+See [CONTRIBUTING](CONTRIBUTING.md), [SECURITY](SECURITY.md) and
+[third-party notices](THIRD_PARTY_NOTICES.md). Project code is MIT licensed;
+bundled fonts retain their SIL Open Font License. The license grants no rights to
+third-party APIs, models, customer media or service accounts.

@@ -1,0 +1,7 @@
+all:
+  children:
+    rhel:
+      hosts:
+        study:
+          ansible_host: rhel.example.test
+          ansible_user: operator

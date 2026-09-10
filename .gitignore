@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.wrangler/
+.dev.vars*
+.env*
+!.env.example
+coverage/
+playwright-report/
+test-results/
+.DS_Store
+/private-launch/
+ops/bin/
+ops/ansible/inventory.local.yml
+ops/ansible/*.local.yml
+__pycache__/
+*.pyc

@@ -1,0 +1,17 @@
+[Unit]
+Description=Talember private GitHub Actions runner
+After=network-online.target
+
+[Service]
+WorkingDirectory={{ ops_directory }}/runner
+Environment=PATH={{ ops_directory }}/runtime/node-v{{ node_version }}-linux-x64/bin:/usr/local/bin:/usr/bin:/bin
+EnvironmentFile=-{{ ops_directory }}/deploy.env
+ExecStart={{ ops_directory }}/runner/runsvc.sh
+Restart=always
+RestartSec=15
+KillMode=process
+TimeoutStopSec=300
+UMask=0077
+
+[Install]
+WantedBy=default.target

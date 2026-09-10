@@ -1,0 +1,91 @@
+---
+- name: Configure the Talember RHEL operations host
+  hosts: rhel
+  gather_facts: true
+  vars:
+    node_version: '24.14.0'
+    ops_directory: '{{ ansible_facts.user_dir }}/talember-ops'
+    manage_base: false
+    manage_node: false
+    manage_runner: false
+    manage_probe: true
+    grant_docker_access: false
+    probe_origin: https://example.com
+    probe_binary: '{{ playbook_dir }}/../bin/talember-probe-linux-amd64'
+  pre_tasks:
+    - name: Require the intended operating system and unprivileged SSH user
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.distribution == 'RedHat'
+          - ansible_facts.distribution_major_version == '9'
+          - ansible_facts.architecture == 'x86_64'
+          - ansible_facts.user_uid != 0
+          - ops_directory is match('^/[A-Za-z0-9_./-]+$')
+          - probe_origin is match('^https://[A-Za-z0-9.-]+(:[0-9]+)?$')
+    - name: Configure system packages and Docker only when explicitly selected
+      ansible.builtin.include_tasks: tasks/base.yml
+      when: manage_base | bool
+    - name: Create private operations directories
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: directory
+        mode: '0700'
+      loop:
+        - '{{ ops_directory }}'
+        - '{{ ops_directory }}/bin'
+    - name: Ensure the user service directory exists
+      ansible.builtin.file:
+        path: '{{ ansible_facts.user_dir }}/.config/systemd/user'
+        state: directory
+        mode: '0755'
+    - name: Install pinned Node only when explicitly selected
+      ansible.builtin.include_tasks: tasks/node.yml
+      when: manage_node | bool
+    - name: Manage an already registered private repository runner
+      ansible.builtin.include_tasks: tasks/runner.yml
+      when: manage_runner | bool
+  tasks:
+    - name: Install the Go monitoring probe
+      when: manage_probe | bool
+      block:
+        - name: Copy the tested Linux binary
+          ansible.builtin.copy:
+            src: '{{ probe_binary }}'
+            dest: '{{ ops_directory }}/bin/talember-probe'
+            mode: '0700'
+          notify: Restart probe
+        - name: Install the probe user service
+          ansible.builtin.template:
+            src: probe.service.j2
+            dest: '{{ ansible_facts.user_dir }}/.config/systemd/user/talember-probe.service'
+            mode: '0600'
+          notify: Restart probe
+        - name: Enable and start the probe
+          when: not ansible_check_mode
+          ansible.builtin.systemd_service:
+            name: talember-probe.service
+            scope: user
+            daemon_reload: true
+            enabled: true
+            state: started
+          environment:
+            XDG_RUNTIME_DIR: '/run/user/{{ ansible_facts.user_uid }}'
+  handlers:
+    - name: Restart probe
+      when: not ansible_check_mode
+      ansible.builtin.systemd_service:
+        name: talember-probe.service
+        scope: user
+        daemon_reload: true
+        state: restarted
+      environment:
+        XDG_RUNTIME_DIR: '/run/user/{{ ansible_facts.user_uid }}'
+    - name: Restart runner
+      when: not ansible_check_mode
+      ansible.builtin.systemd_service:
+        name: talember-runner.service
+        scope: user
+        daemon_reload: true
+        state: restarted
+      environment:
+        XDG_RUNTIME_DIR: '/run/user/{{ ansible_facts.user_uid }}'
